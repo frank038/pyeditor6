@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# V 0.6
+# V 0.6.1
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QStyleFactory,QWidget,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
 from PyQt6.QtCore import (Qt,pyqtSignal,QFile,QIODevice,QPoint,QMimeDatabase)
@@ -769,12 +769,6 @@ class ftab(QWidget):
     def lpython(self):
         if not CUSTOMCOLORS:
             return
-        # if DARKTHEME:
-            # # Default
-            # self.__lexer.setColor(QColor(PDDEFAULT), 0)
-        # else:
-            # # Default
-            # self.__lexer.setColor(QColor(PDEFAULT), 0)
         if DARKTHEME:
             # Default
             self.__lexer.setColor(QColor(PDDEFAULT), 0)
@@ -819,7 +813,7 @@ class ftab(QWidget):
             # Default
             self.__lexer.setColor(QColor(PDEFAULT), 0)
             # Comment
-            self.__lexer.setFont(self.__myFont, 1)
+            self.__lexer.setFont(self.__myFontI, 1)
             self.__lexer.setColor(QColor(PCOMMENT), 1)
             # Number
             self.__lexer.setColor(QColor(PNUMBER), 2)
@@ -864,7 +858,7 @@ class ftab(QWidget):
             # Error
             self.__lexer.setColor(QColor(BDERROR), 1)
             # Comment
-            self.__lexer.setFont(self.__myFont, 2)
+            self.__lexer.setFont(self.__myFontI, 2)
             self.__lexer.setColor(QColor(BDCOMMENT), 2)
             # Number
             self.__lexer.setColor(QColor(BDNUMBER), 3)
@@ -897,7 +891,7 @@ class ftab(QWidget):
             # Error
             self.__lexer.setColor(QColor(BERROR), 1)
             # Comment
-            self.__lexer.setFont(self.__myFont, 2)
+            self.__lexer.setFont(self.__myFontI, 2)
             self.__lexer.setColor(QColor(BCOMMENT), 2)
             # Number
             self.__lexer.setColor(QColor(BNUMBER), 3)
@@ -938,7 +932,7 @@ class ftab(QWidget):
             # JavaDoc style C++ co    mment
             # Pre-processor C comment
             # JavaDoc style pre-processor comment
-            self.__lexer.setFont(self.__myFont, 1)
+            self.__lexer.setFont(self.__myFontI, 1)
             self.__lexer.setColor(QColor(JDCOMMENT), 1)
             self.__lexer.setFont(self.__myFont, 2)
             self.__lexer.setColor(QColor(JDCOMMENT), 2)
@@ -1005,7 +999,7 @@ class ftab(QWidget):
             # JavaDoc style C++ comment
             # Pre-processor C comment
             # JavaDoc style pre-processor comment
-            self.__lexer.setFont(self.__myFont, 1)
+            self.__lexer.setFont(self.__myFontI, 1)
             self.__lexer.setColor(QColor(JCOMMENT), 1)
             self.__lexer.setFont(self.__myFont, 2)
             self.__lexer.setColor(QColor(JCOMMENT), 2)
@@ -1424,7 +1418,7 @@ class searchDialog(QDialog):
         hbox = QBoxLayout(QBoxLayout.Direction.LeftToRight)
         vbox.addLayout(hbox)
         #
-        # self.button4 = QPushButton("Previous")
+        self.button4 = QPushButton("Previous")
         # self.button4.clicked.connect(lambda:self.on_find(0))
         # hbox.addWidget(self.button4)
         #
