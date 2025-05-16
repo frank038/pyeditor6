@@ -34,3 +34,5 @@ Features:
 - optional command line argument: -p for python file, -b for bash file, -j for javascript file, -t for text file (file name is optional)
 - configurable with its config file
 - built-in functions from qscintilla widget: tab/untab (TAB/ALT+TAB), undo/redo (CTRL+z/y), etc.
+
+![My image](https://github.com/frank038/pyeditor6/blob/main/screenshot1.jpg)
