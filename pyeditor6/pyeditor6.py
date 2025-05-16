@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# V 0.5
+# V 0.6
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QStyleFactory,QWidget,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
 from PyQt6.QtCore import (Qt,pyqtSignal,QFile,QIODevice,QPoint,QMimeDatabase)
@@ -1441,6 +1441,8 @@ class searchDialog(QDialog):
         #
         self.Value = 0
         #
+        self._curr_pos = None
+        self._curr_pos2 = None
         # self.exec_()
         self.show()
         
@@ -1475,17 +1477,27 @@ class searchDialog(QDialog):
         #
         if ftype:
             # if not self.first_found:
-            # # if not self.first_found or not self.isForward:
-            self.isForward = True
-            ret = self.editor.findFirst(line_edit_text, False, self.chk_sens.isChecked(), self.chk_word.isChecked(), False, True)
-            self.first_found = ret
-            if ret == False:
+            # if not self.first_found or not self.isForward:
+            # self.isForward = True
+            self._curr_pos = self.editor.getCursorPosition()
+            if self._curr_pos2 == None:
+                ret = self.editor.findFirst(line_edit_text, False, self.chk_sens.isChecked(), self.chk_word.isChecked(), False, True)
+                self._curr_pos2 = self.editor.getCursorPosition()
+            else:
+                self.editor.findNext()
+                self._curr_pos2 = self.editor.getCursorPosition()
+            # self.first_found = ret
+            if self._curr_pos == self._curr_pos2:
+            # if ret == False:
                 ret = retDialogBox("Question", "You have reached the end of the document.\nDo you want to search from the beginning?", self)
                 if ret.getValue() == 0:
                     return
-                # self.first_found = False
+                #
                 self.editor.setCursorPosition(0,0)
                 self.editor.findFirst(line_edit_text, False, self.chk_sens.isChecked(), self.chk_word.isChecked(), False, True)
+                self._curr_pos = None
+                self._curr_pos2 = None
+            
             # else:
                 # # # at the end of the document just stops
                 # # self.editor.findNext()
