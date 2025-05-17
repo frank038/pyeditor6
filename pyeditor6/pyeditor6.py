@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# V 0.6.1
+# V 0.7
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QStyleFactory,QWidget,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
 from PyQt6.QtCore import (Qt,pyqtSignal,QFile,QIODevice,QPoint,QMimeDatabase)
@@ -1310,7 +1310,7 @@ class ftab(QWidget):
             self.parent.frmtab.tabBar().setTabTextColor(curr_idx, Qt.red)
     
     def wheelEvent(self, e):
-        if e.modifiers() & Qt.CTRL:
+        if e.modifiers() & Qt.KeyboardModifier.CTRL:
             if e.angleDelta().y() < 0:
                 self.__editor.zoomOut()
             else:
@@ -1419,8 +1419,8 @@ class searchDialog(QDialog):
         vbox.addLayout(hbox)
         #
         self.button4 = QPushButton("Previous")
-        # self.button4.clicked.connect(lambda:self.on_find(0))
-        # hbox.addWidget(self.button4)
+        self.button4.clicked.connect(lambda:self.on_find(0))
+        hbox.addWidget(self.button4)
         #
         self.button2 = QPushButton("Next")
         self.button2.clicked.connect(lambda:self.on_find(1))
@@ -1431,13 +1431,12 @@ class searchDialog(QDialog):
         hbox.addWidget(button3)
         #
         self.first_found = False
-        self.isForward = True
+        self.is_reverse = False
         #
         self.Value = 0
         #
         self._curr_pos = None
         self._curr_pos2 = None
-        # self.exec_()
         self.show()
         
     def le_cur_changed(self, new_text):
@@ -1464,15 +1463,11 @@ class searchDialog(QDialog):
             #
             return
         #
-        # if ftype == 1 and self.isForward == False: 
-            # self.first_found = False
-        # elif ftype == 0 and self.isForward == True:
-            # self.first_found = False
-        #
         if ftype:
-            # if not self.first_found:
-            # if not self.first_found or not self.isForward:
-            # self.isForward = True
+            if self.is_reverse == True:
+                self._curr_pos = None
+                self._curr_pos2 = None
+            self.is_reverse = False
             self._curr_pos = self.editor.getCursorPosition()
             if self._curr_pos2 == None:
                 ret = self.editor.findFirst(line_edit_text, False, self.chk_sens.isChecked(), self.chk_word.isChecked(), False, True)
@@ -1480,9 +1475,7 @@ class searchDialog(QDialog):
             else:
                 self.editor.findNext()
                 self._curr_pos2 = self.editor.getCursorPosition()
-            # self.first_found = ret
             if self._curr_pos == self._curr_pos2:
-            # if ret == False:
                 ret = retDialogBox("Question", "You have reached the end of the document.\nDo you want to search from the beginning?", self)
                 if ret.getValue() == 0:
                     return
@@ -1491,41 +1484,28 @@ class searchDialog(QDialog):
                 self.editor.findFirst(line_edit_text, False, self.chk_sens.isChecked(), self.chk_word.isChecked(), False, True)
                 self._curr_pos = None
                 self._curr_pos2 = None
-            
-            # else:
-                # # # at the end of the document just stops
-                # # self.editor.findNext()
-                # #
-                # # at the end of the document the seeking starts from the beginning
-                # ret = self.editor.findFirst(line_edit_text, False, self.chk_sens.isChecked(), self.chk_word.isChecked(), False, True)
-                # if ret == False:
-                    # ret = retDialogBox("Question", "You have reached the end of the document.\nDo you want to search from the beginning?", self)
-                    # if ret.getValue() == 0:
-                        # return
-                    # self.first_found = False
-                    # self.editor.setCursorPosition(0,0)
-                    # self.editor.findFirst(line_edit_text, False, self.chk_sens.isChecked(), self.chk_word.isChecked(), False, True)
         else:
-            if not self.first_found:
-            # if not self.first_found or self.isForward:
-                self.isForward = False
+            if self.is_reverse == False:
+                self._curr_pos = None
+                self._curr_pos2 = None
+            self.is_reverse = True
+            self._curr_pos = self.editor.getCursorPosition()
+            if self._curr_pos2 == None:
                 ret = self.editor.findFirst(line_edit_text, False, self.chk_sens.isChecked(), self.chk_word.isChecked(), False, False)
-                self.first_found = ret
+                self._curr_pos2 = self.editor.getCursorPosition()
             else:
-                # # at the beginning of the document just stops
                 self.editor.findNext()
-                # # at the start of the document the seeking starts from the beginning
-                # ret = self.editor.findFirst(line_edit_text, False, self.chk_sens.isChecked(), self.chk_word.isChecked(), False, False)
-                # if ret == False:
-                    # # self.editor.findNext()
-                    # ret = retDialogBox("Question", "You have reached the end of the document.\nDo you want to search from the beginning?", self)
-                    # if ret.getValue() == 0:
-                        # return
-                    # self.first_found = False
-                    # self.editor.setCursorPosition(self.editor.lines()-1,0)
-                    # self.editor.findFirst(line_edit_text, False, self.chk_sens.isChecked(), self.chk_word.isChecked(), False, False)
-        
-    
+                self._curr_pos2 = self.editor.getCursorPosition()
+            if self._curr_pos == self._curr_pos2:
+                ret = retDialogBox("Question", "You have reached the beginning of the document.\nDo you want to search from the end?", self)
+                if ret.getValue() == 0:
+                    return
+                #
+                self.editor.setCursorPosition(self.editor.lines()-1,len(self.editor.text(self.editor.lines()-1))-1)
+                self.editor.findFirst(line_edit_text, False, self.chk_sens.isChecked(), self.chk_word.isChecked(), False, False)
+                self._curr_pos = None
+                self._curr_pos2 = self.editor.getCursorPosition()
+            
     def on_chk(self, idx):
         if idx:
             self.line_edit_sub.setEnabled(True)
