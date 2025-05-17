@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# V 0.7
+# V 0.7.1
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QStyleFactory,QWidget,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
 from PyQt6.QtCore import (Qt,pyqtSignal,QFile,QIODevice,QPoint,QMimeDatabase)
@@ -1270,6 +1270,9 @@ class ftab(QWidget):
     
     # insert a character if a certain one has been typed
     def on_k(self, id):
+        # ctrl++ ctrl+- - find a better way
+        if id == "" or id == "+" or id == "-":
+            return
         if self.__editor.isReadOnly():
             return
         # 40 ( - 39 ' - 34 " - 91 [ - 123 { - 161 ¡ - ¿
@@ -1307,14 +1310,14 @@ class ftab(QWidget):
                 return
             self.isModified = True
             curr_idx = self.parent.frmtab.currentIndex()
-            self.parent.frmtab.tabBar().setTabTextColor(curr_idx, Qt.red)
+            self.parent.frmtab.tabBar().setTabTextColor(curr_idx, QColor(255,0,0))
     
-    def wheelEvent(self, e):
-        if e.modifiers() & Qt.KeyboardModifier.CTRL:
-            if e.angleDelta().y() < 0:
-                self.__editor.zoomOut()
-            else:
-                self.__editor.zoomIn()
+    # def wheelEvent(self, e):
+        # if e.modifiers() & Qt.KeyboardModifier.CTRL:
+            # if e.angleDelta().y() < 0:
+                # self.__editor.zoomOut()
+            # else:
+                # self.__editor.zoomIn()
     
     def __btn_action_close(self):
         if self.isModified:
