@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# V 0.7.1
+# V 0.7.2
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QStyleFactory,QWidget,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
 from PyQt6.QtCore import (Qt,pyqtSignal,QFile,QIODevice,QPoint,QMimeDatabase)
@@ -313,6 +313,8 @@ class CustomMainWindow(QMainWindow):
                 self.frmtab.tabBar().setTabTextColor(self.frmtab.count()-1, QColor("#009900"))
         #
         self.setWindowTitle("pyeditor6 - {}".format(os.path.basename(afilename) or "Unknown"))
+        if DARKTHEME == 2:
+            self.setStyleSheet("QPushButton, QComboBox {border: 0px solid #D1CFCF; background: #717171;}")
         #
         self.show()
         
@@ -1271,7 +1273,7 @@ class ftab(QWidget):
     # insert a character if a certain one has been typed
     def on_k(self, id):
         # ctrl++ ctrl+- - find a better way
-        if id == "" or id == "+" or id == "-":
+        if id == "+" or id == "-":
             return
         if self.__editor.isReadOnly():
             return

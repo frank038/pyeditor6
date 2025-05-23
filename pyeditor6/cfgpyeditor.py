@@ -54,8 +54,8 @@ HISTORYLIMIT=10
 USEWORDAUTOCOMLETION=1
 # the width of the dialogs
 DIALOGWIDTH=300
-# use dark theme (except the following): 0 no - 1 yes
-DARKTHEME=1
+# use dark theme (except the following): 0 no - 1 yes - 2 yes and buttons (workaround)
+DARKTHEME=2
 # use custom colours: 0 no - 1 yes
 CUSTOMCOLORS=1
 ########## python
