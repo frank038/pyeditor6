@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# V 0.7.2
+# V 0.7.3
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QStyleFactory,QWidget,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
 from PyQt6.QtCore import (Qt,pyqtSignal,QFile,QIODevice,QPoint,QMimeDatabase)
@@ -314,7 +314,8 @@ class CustomMainWindow(QMainWindow):
         #
         self.setWindowTitle("pyeditor6 - {}".format(os.path.basename(afilename) or "Unknown"))
         if DARKTHEME == 2:
-            self.setStyleSheet("QPushButton, QComboBox {border: 0px solid #D1CFCF; background: #717171;}")
+            self.setStyleSheet("QPushButton, QComboBox {border: 0px solid #D1CFCF; background: #717171;} QPushButton:hover {border: 1px solid #cecece;}")
+            self.frmtab.setStyleSheet("QTabWidget {background-color: #353535;}")
         #
         self.show()
         
