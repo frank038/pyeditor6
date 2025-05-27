@@ -35,4 +35,7 @@ Features:
 - configurable with its config file
 - built-in functions from qscintilla widget: tab/untab (TAB/ALT+TAB), undo/redo (CTRL+z/y), etc.
 
+![My image](https://github.com/frank038/pyeditor6/blob/main/screenshot2.jpg)
+
+Version 0.7
 ![My image](https://github.com/frank038/pyeditor6/blob/main/screenshot1.jpg)
