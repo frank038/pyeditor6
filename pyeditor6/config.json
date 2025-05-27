@@ -1,0 +1,11 @@
+{
+    "fontfamily": "Monospace",
+    "fontsize": 10,
+    "autoclose": 1,
+    "autocomplch": 3,
+    "usetab": 0,
+    "tabwidth": 2,
+    "dark": 1,
+    "printfont": "Monospace",
+    "printfontsize": 10
+}
