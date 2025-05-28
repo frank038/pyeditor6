@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# V 0.9
+# V 0.9.1
+
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QFormLayout,QStyleFactory,QWidget,QTextEdit,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QSpinBox,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
 from PyQt6.QtCore import (Qt,pyqtSignal,QFile,QIODevice,QPoint,QMimeDatabase)
@@ -93,12 +94,12 @@ class confWin(QDialog):
         #
         self.font_family = QLineEdit()
         self.font_family.setText(FONTFAMILY)
-        pform.addRow("Font name ", self.font_family)
+        pform.addRow("Font name - editor ", self.font_family)
         #
         self.font_size = QSpinBox()
         self.font_size.setMaximum(100)
         self.font_size.setValue(FONTSIZE)
-        pform.addRow("Font size ", self.font_size)
+        pform.addRow("Font size - editor ", self.font_size)
         #
         self.autoclose = QComboBox()
         self.autoclose.setToolTip("Close some symbols automatically")
@@ -114,14 +115,14 @@ class confWin(QDialog):
         pform.addRow("Autocompletition ", self.autocompletition)
         #
         self.usetab = QComboBox()
-        self.usetab.setToolTip("Use tabs or spaces")
+        self.usetab.setToolTip("Use tab or spaces")
         self.usetab.setEditable(False)
         self.usetab.addItems(["No","Yes"])
         self.usetab.setCurrentIndex(USETAB)
         pform.addRow("Use tab ", self.usetab)
         #
         self.tabwidth = QComboBox()
-        self.tabwidth.setToolTip("Use tabs or spaces")
+        self.tabwidth.setToolTip("Amount of characters for the tab")
         self.tabwidth.setEditable(False)
         self.tabwidth.addItems(["2","3","4","5","6","7","8"])
         self.tabwidth.setCurrentIndex(TABWIDTH)
@@ -130,18 +131,18 @@ class confWin(QDialog):
         self.darktheme = QComboBox()
         self.darktheme.setToolTip("Use the dark theme or the default")
         self.darktheme.setEditable(False)
-        self.darktheme.addItems(["No","Yes"])
+        self.darktheme.addItems(["Default","Dark"])
         self.darktheme.setCurrentIndex(DARKTHEME)
-        pform.addRow("The editor theme ", self.darktheme)
+        pform.addRow("Editor theme ", self.darktheme)
         #
         self.print_font_family = QLineEdit()
         self.print_font_family.setText(PRINT_FONT)
-        pform.addRow("Font name ", self.print_font_family)
+        pform.addRow("Font name - printer ", self.print_font_family)
         #
         self.print_font_size = QSpinBox()
         self.print_font_size.setMaximum(100)
         self.print_font_size.setValue(PRINT_FONT_SIZE)
-        pform.addRow("Font size for the printer ", self.print_font_size)
+        pform.addRow("Font size - printer ", self.print_font_size)
         #
         box_btn = QHBoxLayout()
         self.vbox.addLayout(box_btn)
