@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# V 0.9.1
+# V 0.9.2
 
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QFormLayout,QStyleFactory,QWidget,QTextEdit,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QSpinBox,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
-from PyQt6.QtCore import (Qt,pyqtSignal,QFile,QIODevice,QPoint,QMimeDatabase)
+from PyQt6.QtCore import (Qt,pyqtSignal,QCoreApplication,QObject,QMetaObject,pyqtSlot,QFile,QIODevice,QPoint,QMimeDatabase)
 from PyQt6.QtGui import (QAction,QColor,QFont,QIcon,QPalette,QPainter)
 from PyQt6.Qsci import (QsciLexerCustom,QsciScintilla,QsciLexerPython,QsciLexerBash,QsciLexerJavaScript)
 from PyQt6 import QtPrintSupport
@@ -22,7 +22,7 @@ main_dir = os.getcwd()
 #
 ICON_PATH = os.path.join(main_dir,"icons")
 
-_base_config = {"fontfamily":"Monospace", "fontsize":10, "autoclose":1, "autocomplch":3, "usetab":0, "tabwidth":4, "dark":1, "printfont":"Monospace", "printfontsize":10}
+_base_config = {"singleinstance":1, "fontfamily":"Monospace", "fontsize":10, "autoclose":1, "autocomplch":3, "usetab":1, "tabwidth":4, "dark":1, "printfont":"Monospace", "printfontsize":10}
 
 _config_file = os.path.join(main_dir, "config.json")
 if not os.path.exists(_config_file):
@@ -41,6 +41,8 @@ try:
 except:
     sys.exit()
 
+# single instance mode
+SINGLEINSTANCE=my_config["singleinstance"]
 # font famity to use for the editor
 FONTFAMILY=my_config["fontfamily"]
 # font size for the editor
@@ -59,7 +61,16 @@ DARKTHEME=my_config["dark"]
 PRINT_FONT= my_config["printfont"]
 PRINT_FONT_SIZE=my_config["printfontsize"]
 
+PROG_REGISTERED = 0
+if "-a" in sys.argv:
+    SINGLEINSTANCE = 0
 
+if SINGLEINSTANCE:
+    from PyQt6.QtDBus import QDBusConnection, QDBusInterface, QDBusReply
+    if not QDBusConnection.sessionBus().registerService('org.QtDBus.pyeditor6'):
+        SINGLEINSTANCE = 0
+        PROG_REGISTERED = 1
+   
 
 class confWin(QDialog):
     def __init__(self, parent=None):
@@ -144,6 +155,13 @@ class confWin(QDialog):
         self.print_font_size.setValue(PRINT_FONT_SIZE)
         pform.addRow("Font size - printer ", self.print_font_size)
         #
+        self.single_app = QComboBox()
+        self.single_app.setToolTip("Single application mode")
+        self.single_app.setEditable(False)
+        self.single_app.addItems(["No","Yes"])
+        self.single_app.setCurrentIndex(SINGLEINSTANCE)
+        pform.addRow("Single application ", self.single_app)
+        #
         box_btn = QHBoxLayout()
         self.vbox.addLayout(box_btn)
         btn_accept = QPushButton("Accept")
@@ -167,6 +185,7 @@ class confWin(QDialog):
         global DARKTHEME
         global PRINT_FONT
         global PRINT_FONT_SIZE
+        global SINGLEINSTANCE
         global my_config
         try:
             FONTFAMILY = self.font_family.text()
@@ -195,6 +214,9 @@ class confWin(QDialog):
             #
             PRINT_FONT_SIZE = self.print_font_size.value()
             my_config["printfontsize"] = PRINT_FONT_SIZE
+            #
+            SINGLEINSTANCE = self.single_app.currentIndex()
+            my_config["singleinstance"] = SINGLEINSTANCE
             #
             # write the configuration back
             _ff = open(_config_file,"w")
@@ -369,12 +391,18 @@ class MyQsciScintilla(QsciScintilla):
         
 
 class CustomMainWindow(QMainWindow):
+    
     def __init__(self):
         super(CustomMainWindow, self).__init__()
         self.setContentsMargins(0,0,0,0)
         self.setWindowIcon(QIcon("icons/program.svg"))
         self.resize(int(WINW), int(WINH))
         self.setWindowTitle("pyeditor6")
+        #
+        if SINGLEINSTANCE:
+            # QDBusConnection.sessionBus().registerService('org.example.QtDBus.PingExample')
+            QDBusConnection.sessionBus().registerObject('/', self, QDBusConnection.RegisterOption.ExportAllSlots)
+        #
         # Create frame and layout
         # ---------------------------
         #
@@ -407,12 +435,12 @@ class CustomMainWindow(QMainWindow):
         self.btn_open.setToolTip("Open a new document")
         self.btn_open.clicked.connect(self.on_open)
         self.btn_box0.addWidget(self.btn_open, stretch=1)
-        #
-        self.btn_clone = QPushButton()
-        self.btn_clone.setIcon(QIcon().fromTheme(QIcon.ThemeIcon.DocumentNew, QIcon(os.path.join(ICON_PATH, "document-new.png"))))
-        self.btn_clone.setToolTip("Clone the current document")
-        self.btn_clone.clicked.connect(self.on_clone)
-        self.btn_box0.addWidget(self.btn_clone, stretch=1)
+        # # disabled: the ancestor document is been marked as modified wrongly
+        # self.btn_clone = QPushButton()
+        # self.btn_clone.setIcon(QIcon().fromTheme(QIcon.ThemeIcon.DocumentNew, QIcon(os.path.join(ICON_PATH, "document-new.png"))))
+        # self.btn_clone.setToolTip("Clone the current document")
+        # self.btn_clone.clicked.connect(self.on_clone)
+        # self.btn_box0.addWidget(self.btn_clone, stretch=1)
         #
         self.btn_box0.addStretch(20)
         #
@@ -443,12 +471,19 @@ class CustomMainWindow(QMainWindow):
         #
         self.pageName = ""
         afilename = ""
+            
         if len(sys.argv) > 1:
-            if sys.argv[1] in ["-p", "-b", "-j", "-t"]:
-                if len(sys.argv) > 2:
-                    afilename = os.path.realpath(sys.argv[2])
-            else:
-                afilename = os.path.realpath(sys.argv[1])
+            for el in sys.argv[1:]:
+                if el not in ["-p", "-b", "-j", "-t", "-a"]:
+                    afilename = el
+                    break
+        
+        # if len(sys.argv) > 1:
+            # if sys.argv[1] in ["-p", "-b", "-j", "-t"]:
+                # if len(sys.argv) > 2:
+                    # afilename = os.path.realpath(sys.argv[2])
+            # else:
+                # afilename = os.path.realpath(sys.argv[1])
         #
         # for el in self.pageNameHistory[::-1]:
         for el in self.pageNameHistory:
@@ -483,16 +518,20 @@ class CustomMainWindow(QMainWindow):
         self.isargument = 0
         use_mimetype = 1
         if len(sys.argv) > 1:
-            if sys.argv[1] == "-p":
+            # if sys.argv[1] == "-p":
+            if "-p" in sys.argv:
                 self.isargument = 1
                 use_mimetype = 0
-            elif sys.argv[1] == "-b":
+            # elif sys.argv[1] == "-b":
+            elif "-b" in sys.argv:
                 self.isargument = 2
                 use_mimetype = 0
-            elif sys.argv[1] == "-j":
+            # elif sys.argv[1] == "-j":
+            elif "-j" in sys.argv:
                 self.isargument = 3
                 use_mimetype = 0
-            elif sys.argv[1] == "-t":
+            # elif sys.argv[1] == "-t":
+            elif "-t" in sys.argv:
                 self.isargument = 4
                 use_mimetype = 0
         # or from config file
@@ -531,7 +570,12 @@ class CustomMainWindow(QMainWindow):
             self.frmtab.setStyleSheet("QTabWidget {background-color: #353535;}")
         #
         self.show()
-        
+    
+    @pyqtSlot(str, result=str)
+    def ping(self, arg):
+        self.on_single_instance(arg)
+        return arg
+    
     def config_btn_action(self):
         confwin = confWin(self.window)
         
@@ -604,6 +648,9 @@ class CustomMainWindow(QMainWindow):
                 self.on_open_f(fileName)
             else:
                 MyDialog("Error", "Problem with the file.\nIt doesn't exist or it isn't readable.", self)
+    
+    def on_single_instance(self,filename):
+        self.on_open_f(filename)
         
     # related to on_open
     def on_open_f(self, fileName):
@@ -668,7 +715,6 @@ class CustomMainWindow(QMainWindow):
             isMaximized = self.isMaximized()
             # close without update the file
             if isMaximized == True:
-                # qApp.quit()
                 QApplication.quit()
                 return
             #
@@ -678,7 +724,7 @@ class CustomMainWindow(QMainWindow):
                 ifile.close()
             except Exception as E:
                 MyDialog("Error", str(E), self)
-        # qApp.quit()
+        #
         QApplication.quit()
     
     # #
@@ -736,8 +782,9 @@ class ftab(QWidget):
     def on_set_text(self, _text):
         self.__editor.setText(_text)
     
-    def __is_modified(self):
-        return self.isModified
+    # def __is_modified(self):
+        # # return self.isModified
+        # return self.__editor.isModified()
     
     def pop_tab(self, afilename):
         self.__lyt = QVBoxLayout()
@@ -1066,11 +1113,21 @@ class ftab(QWidget):
             # selected word colour
             self.__editor.setSelectionBackgroundColor(QColor(SELECTIONBACKGROUNDCOLOR))
     
-    def on_text_changed(self):
-        self.isModified = True
-        curr_idx = self.parent.frmtab.currentIndex()
-        self.parent.frmtab.tabBar().setTabTextColor(curr_idx, QColor(255,0,0))
-    
+    def on_text_changed(self, _bool):
+        if _bool == True:
+            # if self.isModified == False:
+            # self.isModified = True
+            curr_idx = self.parent.frmtab.currentIndex()
+            self.parent.frmtab.tabBar().setTabTextColor(curr_idx, QColor(255,0,0))
+            # self.parent.frmtab.tabBar().setTabText(curr_idx, self.parent.frmtab.tabBar().tabText(curr_idx)+" *")
+        elif _bool == False:
+            # if self.isModified == True:
+            # self.isModified = False
+            curr_idx = self.parent.frmtab.currentIndex()
+            # _text = self.parent.frmtab.tabBar().tabText(curr_idx).rstrip(" *")
+            # self.parent.frmtab.tabBar().setTabText(curr_idx, _text)
+            self.parent.frmtab.tabBar().setTabTextColor(curr_idx, self.parent.frmtab_tab_text_color)
+        
     def lpython(self):
         if not CUSTOMCOLORS:
             return
@@ -1420,7 +1477,8 @@ class ftab(QWidget):
     
     #
     def on_read_only(self):
-        if self.isModified:
+        # if self.isModified:
+        if self.__editor.isModified():
             MyDialog("Info", "Save this document first.", self)
             return
         #
@@ -1481,7 +1539,8 @@ class ftab(QWidget):
             MyDialog("Error", str(E), self)
         #
         if issaved:
-            self.isModified = False
+            # self.isModified = False
+            self.__editor.setModified(False)
             #
             if not self.pageName+"\n" in self.parent.pageNameHistory:
                 self.parent.btn_h_menu.addAction(self.pageName+"\n")
@@ -1609,13 +1668,14 @@ class ftab(QWidget):
             line, column = self.__editor.getCursorPosition()
             lines = self.__editor.lines()
             self.statusBar.showMessage("line: {0}/{1} column: {2}".format(line+1, lines, column))
-        # the document has been modified
-        if not self.isModified:
-            if id == '':
-                return
-            self.isModified = True
-            curr_idx = self.parent.frmtab.currentIndex()
-            self.parent.frmtab.tabBar().setTabTextColor(curr_idx, QColor(255,0,0))
+        # # the document has been modified
+        # # if not self.isModified:
+        # if not self.__editor.isModified():
+            # if id == '':
+                # return
+            # # self.isModified = True
+            # curr_idx = self.parent.frmtab.currentIndex()
+            # self.parent.frmtab.tabBar().setTabTextColor(curr_idx, QColor(255,0,0))
     
     # def wheelEvent(self, e):
         # if e.modifiers() & Qt.KeyboardModifier.CTRL:
@@ -1625,7 +1685,8 @@ class ftab(QWidget):
                 # self.__editor.zoomIn()
     
     def __btn_action_close(self):
-        if self.isModified:
+        # if self.isModified:
+        if self.__editor.isModified():
             ret = retDialogBox("Question", "This document has been modified. \nDo you want to proceed anyway?", self)
             if ret.getValue() == 0:
                 return
@@ -1880,10 +1941,34 @@ class retDialogBox(QMessageBox):
             # textEdit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         # #
         # return result
-        
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    
+    IS_SINGLEINSTANCE = 1
+    if SINGLEINSTANCE:
+        if not QDBusConnection.sessionBus().isConnected():
+            IS_SINGLEINSTANCE = 0
+    
+    if PROG_REGISTERED:
+        iface = QDBusInterface('org.QtDBus.pyeditor6', '/', '', QDBusConnection.sessionBus())
+        #
+        if iface.isValid() and len(sys.argv) > 1:
+            
+            for el in sys.argv[1:]:
+                if el not in ["-p", "-b", "-j", "-t", "-a"]:
+                    _file = el
+                    break
+            
+            if _file:
+                _file = os.path.realpath(_file)
+                # msg = iface.call('ping', sys.argv[1] if len(sys.argv) > 1 else "")
+                msg = iface.call('ping', _file)
+                reply = QDBusReply(msg)
+                if reply.isValid():
+                    if reply.value() == _file:
+                        sys.exit()
+    
     if GUISTYLE:
         QApplication.setStyle(QStyleFactory.create(GUISTYLE))
     # # Now use a palette to switch to dark colors

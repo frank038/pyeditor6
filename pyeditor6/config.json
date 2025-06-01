@@ -1,4 +1,5 @@
 {
+    "singleinstance": 1,
     "fontfamily": "Monospace",
     "fontsize": 10,
     "autoclose": 1,
