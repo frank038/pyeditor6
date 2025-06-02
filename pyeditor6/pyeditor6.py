@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# V 0.9.3
+# V 0.9.4
 
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QFormLayout,QStyleFactory,QWidget,QTextEdit,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QSpinBox,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
-from PyQt6.QtCore import (Qt,pyqtSignal,QCoreApplication,QObject,QMetaObject,pyqtSlot,QFile,QIODevice,QPoint,QMimeDatabase)
+from PyQt6.QtCore import (Qt,pyqtSignal,QCoreApplication,QObject,pyqtSlot,QFile,QIODevice,QPoint,QMimeDatabase)
 from PyQt6.QtGui import (QAction,QColor,QFont,QIcon,QPalette,QPainter)
 from PyQt6.Qsci import (QsciLexerCustom,QsciScintilla,QsciLexerPython,QsciLexerBash,QsciLexerJavaScript)
 from PyQt6 import QtPrintSupport
@@ -22,7 +22,7 @@ main_dir = os.getcwd()
 #
 ICON_PATH = os.path.join(main_dir,"icons")
 
-_base_config = {"singleinstance":1, "fontfamily":"Monospace", "fontsize":10, "autoclose":1, "autocomplch":3, "usetab":1, "tabwidth":4, "dark":1, "printfont":"Monospace", "printfontsize":10}
+_base_config = {"singleinstance":1, "fontfamily":"Monospace", "fontsize":10, "autoclose":1, "autocomplch":3, "usetab":1, "tabwidth":4, "dark":1, "printfont":"Monospace", "printfontsize":10, "reloaddoc":1}
 
 _config_file = os.path.join(main_dir, "config.json")
 if not os.path.exists(_config_file):
@@ -58,8 +58,10 @@ TABWIDTH=my_config["tabwidth"]
 # use dark theme for the editor: 0 no - 1 yes - 2 yes and buttons and tabwidget (workaround)
 DARKTHEME=my_config["dark"]
 # for printing
-PRINT_FONT= my_config["printfont"]
+PRINT_FONT=my_config["printfont"]
 PRINT_FONT_SIZE=my_config["printfontsize"]
+# for reloading the files previously loaded but not closed by the user
+USE_RELOAD_DOC=my_config["reloaddoc"]
 
 PROG_REGISTERED = 0
 if "-a" in sys.argv:
@@ -162,6 +164,13 @@ class confWin(QDialog):
         self.single_app.setCurrentIndex(SINGLEINSTANCE)
         pform.addRow("Single application ", self.single_app)
         #
+        self.reload_doc = QComboBox()
+        self.reload_doc.setToolTip("Reload the files not closed")
+        self.reload_doc.setEditable(False)
+        self.reload_doc.addItems(["No","Yes"])
+        self.reload_doc.setCurrentIndex(USE_RELOAD_DOC)
+        pform.addRow("Reload the files at start ", self.reload_doc)
+        #
         box_btn = QHBoxLayout()
         self.vbox.addLayout(box_btn)
         btn_accept = QPushButton("Accept")
@@ -186,6 +195,7 @@ class confWin(QDialog):
         global PRINT_FONT
         global PRINT_FONT_SIZE
         global SINGLEINSTANCE
+        global USE_RELOAD_DOC
         global my_config
         try:
             FONTFAMILY = self.font_family.text()
@@ -217,6 +227,9 @@ class confWin(QDialog):
             #
             SINGLEINSTANCE = self.single_app.currentIndex()
             my_config["singleinstance"] = SINGLEINSTANCE
+            #
+            USE_RELOAD_DOC = self.reload_doc.currentIndex()
+            my_config["reloaddoc"] = USE_RELOAD_DOC
             #
             # write the configuration back
             _ff = open(_config_file,"w")
@@ -400,8 +413,23 @@ class CustomMainWindow(QMainWindow):
         self.setWindowTitle("pyeditor6")
         #
         if SINGLEINSTANCE:
-            # QDBusConnection.sessionBus().registerService('org.example.QtDBus.PingExample')
+            # return True on success
             QDBusConnection.sessionBus().registerObject('/', self, QDBusConnection.RegisterOption.ExportAllSlots)
+        else:
+            try:
+                # for registering a new interface if the previous one has been removed
+                import dbus
+                from dbus.mainloop.pyqt6 import DBusQtMainLoop
+                mainloop = DBusQtMainLoop(set_as_default=True)
+                bus = dbus.SessionBus()
+                dbus.set_default_main_loop(mainloop)
+                bus.add_signal_receiver(self.interfaces_removed,
+                                    signal_name=None,
+                                    dbus_interface=None,
+                                    bus_name=None, 
+                                    path=None)
+            except:
+                pass
         #
         # Create frame and layout
         # ---------------------------
@@ -485,6 +513,14 @@ class CustomMainWindow(QMainWindow):
             # else:
                 # afilename = os.path.realpath(sys.argv[1])
         #
+        if not os.path.exists(os.path.realpath(afilename)):
+            MyDialog("Info", "The file\n{}\ndoes not exist.".format(afilename), self)
+            afilename = ""
+            sys.exit()
+        elif not os.access(os.path.realpath(afilename), os.R_OK):
+            MyDialog("Info", "The file\n{}\nis not readable.".format(afilename), self)
+            afilename = ""
+            sys.exit()
         # for el in self.pageNameHistory[::-1]:
         for el in self.pageNameHistory:
             if el.rstrip("\n") == self.pageName:
@@ -557,19 +593,62 @@ class CustomMainWindow(QMainWindow):
             else:
                 self.isargument = 4
         #
-        pop_tab = ftab(afilename, self.isargument, self)
-        self.frmtab.addTab(pop_tab, os.path.basename(afilename) or "Unknown")
-        self.frmtab.setTabToolTip(0, afilename or "Unknown")
-        if afilename:
-            if not os.access(afilename, os.W_OK):
-                self.frmtab.tabBar().setTabTextColor(self.frmtab.count()-1, QColor("#009900"))
+        _i = 0
+        if USE_RELOAD_DOC:
+            # reopen the files from the previous session
+            _previous_files = []
+            try:
+                _f = open(os.path.join(main_dir, "file_opened"), "r")
+                _previous_files = _f.readlines()
+                _f.close()
+            except:
+                pass
+            #
+            try:
+                os.remove(os.path.join(main_dir, "file_opened"))
+            except Exception as E:
+                MyDialog("Error", str(E), self)
+            #
+            if len(_previous_files) > 0:
+                for _file in _previous_files:
+                    _filename = _file.strip("\n")
+                    if _filename == "":
+                        continue
+                    if os.path.exists(_filename) and os.access(_filename, os.R_OK):
+                        pop_tab = ftab(_filename, self.isargument, self)
+                        self.frmtab.addTab(pop_tab, os.path.basename(_filename))
+                        self.frmtab.setTabToolTip(_i, _filename)
+                        if not os.access(_filename, os.W_OK):
+                            self.frmtab.tabBar().setTabTextColor(_i, QColor("#009900"))
+                        self.setWindowTitle("pyeditor6 - {}".format(os.path.basename(_filename) or "Unknown"))
+                        self.frmtab.setCurrentIndex(_i)
+                        _i += 1
         #
-        self.setWindowTitle("pyeditor6 - {}".format(os.path.basename(afilename) or "Unknown"))
+        if _i == 0:
+            pop_tab = ftab(afilename, self.isargument, self)
+            self.frmtab.addTab(pop_tab, os.path.basename(afilename) or "Unknown")
+            self.frmtab.setTabToolTip(0, afilename or "Unknown")
+            if afilename:
+                if not os.access(afilename, os.W_OK):
+                    self.frmtab.tabBar().setTabTextColor(self.frmtab.count()-1, QColor("#009900"))
+            #
+            self.setWindowTitle("pyeditor6 - {}".format(os.path.basename(afilename) or "Unknown"))
+        #
         if DARKTHEME == 2:
             self.setStyleSheet("QPushButton, QComboBox {border: 0px solid #D1CFCF; background: #717171;} QPushButton:hover {border: 1px solid #cecece;}")
             self.frmtab.setStyleSheet("QTabWidget {background-color: #353535;}")
         #
         self.show()
+    
+    def interfaces_removed(self, *args):
+        try:
+            if len(args) > 0:
+                # if args[0] == "org.QtDBus.pyeditor6":
+                if "org.QtDBus.pyeditor6" in args:
+                    if QDBusConnection.sessionBus().registerService('org.QtDBus.pyeditor6'):
+                        QDBusConnection.sessionBus().registerObject('/', self, QDBusConnection.RegisterOption.ExportAllSlots)
+        except:
+            pass
     
     @pyqtSlot(str, result=str)
     def ping(self, arg):
@@ -649,8 +728,28 @@ class CustomMainWindow(QMainWindow):
             else:
                 MyDialog("Error", "Problem with the file.\nIt doesn't exist or it isn't readable.", self)
     
+    def bring_to_top(self):
+        flags = self.windowFlags()
+        flags |= Qt.WindowType.WindowStaysOnTopHint
+        self.setWindowFlags(flags)
+        # self.show()
+        flags &= ~Qt.WindowType.WindowStaysOnTopHint
+        self.setWindowFlags(flags)
+        self.show()
+    
     def on_single_instance(self,filename):
+        if filename == "":
+            return
+        _pages = self.frmtab.count()
+        for i in range(_pages):
+            _text = self.frmtab.tabBar().tabToolTip(i)
+            if _text == filename:
+                self.frmtab.tabBar().setCurrentIndex(i)
+                self.bring_to_top()
+                return
+        #
         self.on_open_f(filename)
+        self.bring_to_top()
         
     # related to on_open
     def on_open_f(self, fileName):
@@ -775,6 +874,14 @@ class ftab(QWidget):
         self.sufftype = ""
         #
         self.pop_tab(afilename)
+        #
+        self._afilename = afilename
+        if USE_RELOAD_DOC:
+            try:
+                with open(os.path.join(main_dir,"file_opened"), "a") as _f:
+                    _f.write("{}\n".format(afilename))
+            except:
+                pass
     
     def on_get_text(self):
         return self.__editor.text()
@@ -914,7 +1021,7 @@ class ftab(QWidget):
             else:
                 filenotfound = 1
         except Exception as E:
-            MyDialog("Error", str(E), self)
+            MyDialog("Error", str(E), self.parent)
         #
         self.__editor.setLexer(None)            # We install lexer later
         self.__editor.setUtf8(True)             # Set encoding to UTF-8
@@ -1015,7 +1122,7 @@ class ftab(QWidget):
         self.show()
         # 
         if filenotfound and afilename:
-            MyDialog("Error", "The file\n\n{}\n\ndoesn't exist or it isn't readable.".format(afilename), self)
+            MyDialog("Error", "The file\n\n{}\n\ndoesn't exist or it isn't readable.".format(afilename), self.parent)
         # file is not writable
         if self.pageName and not os.access(self.pageName, os.W_OK):
             self.__editor.setReadOnly(True)
@@ -1479,12 +1586,12 @@ class ftab(QWidget):
     def on_read_only(self):
         # if self.isModified:
         if self.__editor.isModified():
-            MyDialog("Info", "Save this document first.", self)
+            MyDialog("Info", "Save this document first.", self.parent)
             return
         #
         if self.pageName:
             if not os.access(self.pageName, os.W_OK):
-                MyDialog("Info", "This document cannot be written.", self)
+                MyDialog("Info", "This document cannot be written.", self.parent)
                 return
         #
         if not self.__editor.isReadOnly():
@@ -1536,7 +1643,7 @@ class ftab(QWidget):
             issaved = ret
             fd.close()
         except Exception as E:
-            MyDialog("Error", str(E), self)
+            MyDialog("Error", str(E), self.parent)
         #
         if issaved:
             self.isModified = False
@@ -1553,7 +1660,7 @@ class ftab(QWidget):
             self.parent.setWindowTitle("pyeditor6 - {}".format(os.path.basename(self.pageName)))
             self.parent.frmtab.tabBar().setTabTextColor(curr_idx, self.parent.frmtab_tab_text_color)
         else:
-            MyDialog("Error", "Problem while saving the file.", self)
+            MyDialog("Error", "Problem while saving the file.", self.parent)
         
     #
     def on_search(self):
@@ -1684,6 +1791,25 @@ class ftab(QWidget):
             # else:
                 # self.__editor.zoomIn()
     
+    def remove_doc_from_list_opened(self):
+        try:
+            _files = []
+            _f = open(os.path.join(main_dir, "file_opened"), "r")
+            _files = _f.readlines()
+            _f.close()
+            #
+            for _ff in _files:
+                if _ff.strip("\n") == self._afilename:
+                    _files.remove(_ff)
+            #
+            if len(_files) > 0:
+                _f = open(os.path.join(main_dir, "file_opened"), "w")
+                for ff in _files:
+                    _f.write(ff)
+                _f.close()
+        except Exception as E:
+            MyDialog("Error", str(E), self.parent)
+    
     def __btn_action_close(self):
         # if self.isModified:
         if self.isModified and self.__editor.isModified():
@@ -1695,6 +1821,9 @@ class ftab(QWidget):
             ret = retDialogBox("Question", "Close this document?", self)
             if ret.getValue() == 0:
                 return
+        #
+        if USE_RELOAD_DOC:
+            self.remove_doc_from_list_opened()
         #
         if self.parent.frmtab.count() > 1:
             curr_idx = self.parent.frmtab.currentIndex()
@@ -1951,6 +2080,10 @@ if __name__ == '__main__':
             IS_SINGLEINSTANCE = 0
     
     if PROG_REGISTERED:
+        # exit if no file passed
+        if len(sys.argv) == 1 or sys.argv[1] in ["-p", "-b", "-j", "-t", "-a"]:
+            sys.exit()
+        #
         iface = QDBusInterface('org.QtDBus.pyeditor6', '/', '', QDBusConnection.sessionBus())
         #
         if iface.isValid() and len(sys.argv) > 1:

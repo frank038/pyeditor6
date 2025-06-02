@@ -8,5 +8,6 @@
     "tabwidth": 2,
     "dark": 1,
     "printfont": "Monospace",
-    "printfontsize": 10
+    "printfontsize": 10,
+    "reloaddoc": 0
 }
