@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# V 0.9.2
+# V 0.9.3
 
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QFormLayout,QStyleFactory,QWidget,QTextEdit,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QSpinBox,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
@@ -1116,13 +1116,13 @@ class ftab(QWidget):
     def on_text_changed(self, _bool):
         if _bool == True:
             # if self.isModified == False:
-            # self.isModified = True
+            self.isModified = True
             curr_idx = self.parent.frmtab.currentIndex()
             self.parent.frmtab.tabBar().setTabTextColor(curr_idx, QColor(255,0,0))
             # self.parent.frmtab.tabBar().setTabText(curr_idx, self.parent.frmtab.tabBar().tabText(curr_idx)+" *")
         elif _bool == False:
             # if self.isModified == True:
-            # self.isModified = False
+            self.isModified = False
             curr_idx = self.parent.frmtab.currentIndex()
             # _text = self.parent.frmtab.tabBar().tabText(curr_idx).rstrip(" *")
             # self.parent.frmtab.tabBar().setTabText(curr_idx, _text)
@@ -1539,7 +1539,7 @@ class ftab(QWidget):
             MyDialog("Error", str(E), self)
         #
         if issaved:
-            # self.isModified = False
+            self.isModified = False
             self.__editor.setModified(False)
             #
             if not self.pageName+"\n" in self.parent.pageNameHistory:
@@ -1686,7 +1686,7 @@ class ftab(QWidget):
     
     def __btn_action_close(self):
         # if self.isModified:
-        if self.__editor.isModified():
+        if self.isModified and self.__editor.isModified():
             ret = retDialogBox("Question", "This document has been modified. \nDo you want to proceed anyway?", self)
             if ret.getValue() == 0:
                 return
