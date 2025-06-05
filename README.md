@@ -34,10 +34,12 @@ Features:
 - status bar
 - optional command line argument: -p for python file, -b for bash file, -j for javascript file, -t for text file (file name is optional)
 - configurable with its config file
-- built-in functions from qscintilla widget: tab/untab (TAB/ALT+TAB), undo/redo (CTRL+z/y), etc.
-- from version 0.9: gui restyling; setting dialog (for many options); clone mode (currently disabled; opens a new tab with the same content of the ancestor document); print dialog; single instance mode (only for the first instance of the program; the -a option disables it at launch; the next instance of this program can own this funcionality after the first instance exits); can load the files not closed by the user if this option is enabled.
+- built-in functions from qscintilla widget: tab/untab (TAB/ALT+TAB), undo/redo (CTRL+z/y), etc.;
+- setting dialog (for many options, others are in cfgpyeditor.py);
+- clone mode (currently disabled; opens a new tab with the same content of the ancestor document);
+- print dialog; single instance mode (only for the first instance of the program;
+- the -a option disables it at launch; the next instance of this program can own this funcionality after the first instance exits);
+- can load the files not closed by the user if this option is enabled.
 
 ![My image](https://github.com/frank038/pyeditor6/blob/main/screenshot2.jpg)
 
-Version 0.7
-![My image](https://github.com/frank038/pyeditor6/blob/main/screenshot1.jpg)
