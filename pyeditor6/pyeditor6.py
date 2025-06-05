@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# V 0.9.5
+# V 0.9.6
 
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QFormLayout,QStyleFactory,QWidget,QTextEdit,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QSpinBox,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
@@ -517,7 +517,7 @@ class CustomMainWindow(QMainWindow):
             MyDialog("Info", "The file\n{}\ndoes not exist.".format(afilename), self)
             afilename = ""
             sys.exit()
-        elif not os.access(os.path.realpath(afilename), os.R_OK):
+        if not os.access(os.path.realpath(afilename), os.R_OK):
             MyDialog("Info", "The file\n{}\nis not readable.".format(afilename), self)
             afilename = ""
             sys.exit()
@@ -1948,6 +1948,7 @@ class searchDialog(QDialog):
     def le_cur_changed(self, new_text):
         self.first_found = False
     
+    # ftype is 1 next 0 previous
     def on_find(self, ftype):
         line_edit_text = self.line_edit.currentText()
         if line_edit_text == "":
@@ -1968,12 +1969,12 @@ class searchDialog(QDialog):
             self.editor.setCursorPosition(pline, pcol)
             #
             return
-        #
+        # find next
         if ftype:
             if self.is_reverse == True:
                 self._curr_pos = None
                 self._curr_pos2 = None
-            self.is_reverse = False
+                self.is_reverse = False
             self._curr_pos = self.editor.getCursorPosition()
             if self._curr_pos2 == None:
                 ret = self.editor.findFirst(line_edit_text, False, self.chk_sens.isChecked(), self.chk_word.isChecked(), False, True)
@@ -1990,14 +1991,16 @@ class searchDialog(QDialog):
                 self.editor.findFirst(line_edit_text, False, self.chk_sens.isChecked(), self.chk_word.isChecked(), False, True)
                 self._curr_pos = None
                 self._curr_pos2 = None
+        # find previous
         else:
             if self.is_reverse == False:
                 self._curr_pos = None
                 self._curr_pos2 = None
-            self.is_reverse = True
+                self.is_reverse = True
             self._curr_pos = self.editor.getCursorPosition()
             if self._curr_pos2 == None:
                 ret = self.editor.findFirst(line_edit_text, False, self.chk_sens.isChecked(), self.chk_word.isChecked(), False, False)
+                self.editor.findNext()
                 self._curr_pos2 = self.editor.getCursorPosition()
             else:
                 self.editor.findNext()
