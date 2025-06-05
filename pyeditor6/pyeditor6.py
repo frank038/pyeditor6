@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# V 0.9.4
+# V 0.9.5
 
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QFormLayout,QStyleFactory,QWidget,QTextEdit,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QSpinBox,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
@@ -1625,22 +1625,30 @@ class ftab(QWidget):
     def on_save_as(self):
         fileName, _ = QFileDialog.getSaveFileName(self, "File Name...", os.path.join(os.path.expanduser("~"), self.pageName or "document{}".format(self.sufftype)), "All Files (*)")
         if fileName:
-            self.pageName = fileName
-            self.on_save()
+            # the previous existent or saved document will remain the current document
+            if not self.pageName:
+                self.pageName = fileName
+            self.on_save(fileName)
     
     #
-    def on_save(self):
+    def on_save(self, fileName=None):
         if not self.pageName:
             self.pageName = os.path.join(os.path.expanduser("~"), "document{}".format(self.sufftype))
             self.on_save_as()
             return
         #
         issaved = 0
+        if fileName:
+            _pageName = fileName
+        else:
+            _pageName = self.pageName
         try:
-            fd = QFile(self.pageName)
+            # fd = QFile(self.pageName)
+            fd = QFile(_pageName)
             fd.open(QIODevice.OpenModeFlag.WriteOnly)
             ret = self.__editor.write(fd)
-            issaved = ret
+            if _pageName == self.pageName:
+                issaved = ret
             fd.close()
         except Exception as E:
             MyDialog("Error", str(E), self.parent)
@@ -1659,8 +1667,8 @@ class ftab(QWidget):
             self.parent.frmtab.setTabToolTip(curr_idx, self.pageName)
             self.parent.setWindowTitle("pyeditor6 - {}".format(os.path.basename(self.pageName)))
             self.parent.frmtab.tabBar().setTabTextColor(curr_idx, self.parent.frmtab_tab_text_color)
-        else:
-            MyDialog("Error", "Problem while saving the file.", self.parent)
+        # else:
+            # MyDialog("Error", "Problem while saving the file.", self.parent)
         
     #
     def on_search(self):
