@@ -902,17 +902,18 @@ class ftab(QWidget):
         self.file_watcher.addPath(_file)
     
     def on_file_changed(self, _file):
-        self.__editor.setModified(True)
-        self.isModified = True
-        curr_idx = None
-        _pages = self.parent.frmtab.count()
-        for i in range(_pages):
-            _text = self.parent.frmtab.tabBar().tabToolTip(i)
-            if _text == _file:
-                curr_idx = i
-                break
-        if curr_idx != None:
-            self.parent.frmtab.tabBar().setTabTextColor(curr_idx, QColor(255,0,0))
+        if self.isModified == False:
+            self.__editor.setModified(True)
+            self.isModified = True
+            curr_idx = None
+            _pages = self.parent.frmtab.count()
+            for i in range(_pages):
+                _text = self.parent.frmtab.tabBar().tabToolTip(i)
+                if _text == _file:
+                    curr_idx = i
+                    break
+            if curr_idx != None:
+                self.parent.frmtab.tabBar().setTabTextColor(curr_idx, QColor(255,0,0))
     
     def on_get_text(self):
         return self.__editor.text()
