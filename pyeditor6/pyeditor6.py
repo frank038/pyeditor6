@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# V 0.9.6
+# V 0.9.7
 
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QFormLayout,QStyleFactory,QWidget,QTextEdit,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QSpinBox,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
-from PyQt6.QtCore import (Qt,pyqtSignal,QCoreApplication,QObject,pyqtSlot,QFile,QIODevice,QPoint,QMimeDatabase)
+from PyQt6.QtCore import (Qt,pyqtSignal,QCoreApplication,QObject,pyqtSlot,QFile,QIODevice,QPoint,QMimeDatabase,QFileSystemWatcher)
 from PyQt6.QtGui import (QAction,QColor,QFont,QIcon,QPalette,QPainter)
 from PyQt6.Qsci import (QsciLexerCustom,QsciScintilla,QsciLexerPython,QsciLexerBash,QsciLexerJavaScript)
 from PyQt6 import QtPrintSupport
@@ -500,24 +500,27 @@ class CustomMainWindow(QMainWindow):
         self.pageName = ""
         afilename = ""
             
-        if len(sys.argv) > 1:
-            for el in sys.argv[1:]:
-                if el not in ["-p", "-b", "-j", "-t", "-a"]:
-                    afilename = el
-                    break
-        
         # if len(sys.argv) > 1:
-            # if sys.argv[1] in ["-p", "-b", "-j", "-t"]:
-                # if len(sys.argv) > 2:
-                    # afilename = os.path.realpath(sys.argv[2])
-            # else:
-                # afilename = os.path.realpath(sys.argv[1])
+            # for el in sys.argv[1:]:
+                # if el not in ["-p", "-b", "-j", "-t", "-a"]:
+                    # afilename = el
+                    # break
         #
-        if not os.path.exists(os.path.realpath(afilename)):
+        # if afilename:
+            # afilename = os.path.realpath(afilename)
+        #
+        if len(sys.argv) > 1:
+            if sys.argv[1] in ["-p", "-b", "-j", "-t"]:
+                if len(sys.argv) > 2:
+                    afilename = os.path.realpath(sys.argv[2])
+            else:
+                afilename = os.path.realpath(sys.argv[1])
+        #
+        if not os.path.exists(afilename):
             MyDialog("Info", "The file\n{}\ndoes not exist.".format(afilename), self)
             afilename = ""
             sys.exit()
-        if not os.access(os.path.realpath(afilename), os.R_OK):
+        if not os.access(afilename, os.R_OK):
             MyDialog("Info", "The file\n{}\nis not readable.".format(afilename), self)
             afilename = ""
             sys.exit()
@@ -684,11 +687,15 @@ class CustomMainWindow(QMainWindow):
     
     # open a file from the history
     def on_h_menu(self, action):
-        fileName = action.text()
+        fileName = os.path.realpath(action.text())
+        if not os.path.exists(fileName) or not os.access(fileName, os.R_OK):
+            MyDialog("Info", "The file\n{}\ndoes not exist.".format(fileName), self)
+            return
         #
         is_found = 0
         for tt in range(self.frmtab.count()):
-            if self.frmtab.tabText(tt) == os.path.basename(fileName.strip("\n")):
+            # if self.frmtab.tabText(tt) == os.path.basename(fileName.strip("\n")):
+            if self.frmtab.tabToolTip(tt) == fileName.strip("\n"):
                 is_found = 1
                 break
         if is_found:
@@ -882,6 +889,30 @@ class ftab(QWidget):
                     _f.write("{}\n".format(afilename))
             except:
                 pass
+        # restore the right value
+        self.__editor.setModified(False)
+        # 
+        self.file_watcher = QFileSystemWatcher()
+        self.file_watcher.fileChanged.connect(self.on_file_changed)
+        # 
+        if self.pageName:
+            self.add_filewatcher(self.pageName)
+    
+    def add_filewatcher(self, _file):
+        self.file_watcher.addPath(_file)
+    
+    def on_file_changed(self, _file):
+        self.__editor.setModified(True)
+        self.isModified = True
+        curr_idx = None
+        _pages = self.parent.frmtab.count()
+        for i in range(_pages):
+            _text = self.parent.frmtab.tabBar().tabToolTip(i)
+            if _text == _file:
+                curr_idx = i
+                break
+        if curr_idx != None:
+            self.parent.frmtab.tabBar().setTabTextColor(curr_idx, QColor(255,0,0))
     
     def on_get_text(self):
         return self.__editor.text()
@@ -1820,7 +1851,7 @@ class ftab(QWidget):
     
     def __btn_action_close(self):
         # if self.isModified:
-        if self.isModified and self.__editor.isModified():
+        if self.isModified or self.__editor.isModified():
             ret = retDialogBox("Question", "This document has been modified. \nDo you want to proceed anyway?", self)
             if ret.getValue() == 0:
                 return
