@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# V 0.9.7
+# V 0.9.8
 
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QFormLayout,QStyleFactory,QWidget,QTextEdit,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QSpinBox,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
@@ -894,7 +894,9 @@ class ftab(QWidget):
         # 
         self.file_watcher = QFileSystemWatcher()
         self.file_watcher.fileChanged.connect(self.on_file_changed)
-        # 
+        # the file is saved by the user
+        self.save_from_this = 0
+        #
         if self.pageName:
             self.add_filewatcher(self.pageName)
     
@@ -902,7 +904,10 @@ class ftab(QWidget):
         self.file_watcher.addPath(_file)
     
     def on_file_changed(self, _file):
-        if self.isModified == False:
+        if self.save_from_this == 1:
+            self.save_from_this = 0
+            return
+        if self.isModified == False and self.save_from_this == 0:
             self.__editor.setModified(True)
             self.isModified = True
             curr_idx = None
@@ -1685,6 +1690,7 @@ class ftab(QWidget):
         except Exception as E:
             MyDialog("Error", str(E), self.parent)
         #
+        self.save_from_this = 1
         if issaved:
             self.isModified = False
             self.__editor.setModified(False)
