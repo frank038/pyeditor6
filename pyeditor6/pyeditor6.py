@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# V 0.9.8
+# V 0.9.9
 
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QFormLayout,QStyleFactory,QWidget,QTextEdit,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QSpinBox,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
@@ -993,6 +993,12 @@ class ftab(QWidget):
         self.btn_print.clicked.connect(self.on_btn_print)
         self.btn_box.addWidget(self.btn_print, stretch=0)
         #
+        self.btn_reload = QPushButton()
+        self.btn_reload.setIcon(QIcon().fromTheme("redo", QIcon(os.path.join(ICON_PATH, "reload.png"))))
+        self.btn_reload.setToolTip("Reload the document")
+        self.btn_reload.clicked.connect(self.on_btn_reload)
+        self.btn_box.addWidget(self.btn_reload, stretch=0)
+        #
         self.btn_box.addStretch(stretch=20)
         #
         self.btn_save = QPushButton()
@@ -1212,6 +1218,21 @@ class ftab(QWidget):
         if dlg.exec():
             _printer = dlg.printer()
             _editor.print(_printer)
+        
+    def on_btn_reload(self):
+        try:
+            if self.pageName and os.path.exists(self.pageName) and os.path.isfile(self.pageName) and os.access(self.pageName, os.R_OK):
+                fd = QFile(self.pageName)
+                fd.open(QIODevice.OpenModeFlag.ReadOnly)
+                self.__editor.read(fd)
+                fd.close()
+            #
+            self.__editor.setModified(False)
+            self.isModified = False
+            curr_idx = self.parent.frmtab.currentIndex()
+            self.parent.frmtab.tabBar().setTabTextColor(curr_idx, self.parent.frmtab_tab_text_color)
+        except Exception as E:
+            MyDialog("Error", str(E), self.parent)
         
     def on_combo_tab(self, idx):
         self.__editor.setIndentationsUseTabs(bool(idx))
@@ -1857,6 +1878,9 @@ class ftab(QWidget):
             MyDialog("Error", str(E), self.parent)
     
     def __btn_action_close(self):
+        if self.parent.frmtab.count() == 1:
+            self.parent.close()
+            return
         # if self.isModified:
         if self.isModified or self.__editor.isModified():
             ret = retDialogBox("Question", "This document has been modified. \nDo you want to proceed anyway?", self)
@@ -1875,14 +1899,16 @@ class ftab(QWidget):
             curr_idx = self.parent.frmtab.currentIndex()
             self.parent.frmtab.removeTab(curr_idx)
             return
-        else:
-            self.__editor.setText("")
-            self.isModified = False
-            curr_idx = self.parent.frmtab.currentIndex()
-            self.parent.frmtab.setTabText(curr_idx, "Unknown")
-            self.parent.frmtab.tabBar().setTabTextColor(curr_idx, self.parent.frmtab_tab_text_color)
-            self.parent.setWindowTitle("pyeditor6 - Unknown")
-            self.statusBar.showMessage("line: -/- column: -")
+        # else:
+            # self.parent.close()
+            #
+            # self.__editor.setText("")
+            # self.isModified = False
+            # curr_idx = self.parent.frmtab.currentIndex()
+            # self.parent.frmtab.setTabText(curr_idx, "Unknown")
+            # self.parent.frmtab.tabBar().setTabTextColor(curr_idx, self.parent.frmtab_tab_text_color)
+            # self.parent.setWindowTitle("pyeditor6 - Unknown")
+            # self.statusBar.showMessage("line: -/- column: -")
 
 # simple dialog message
 # type - message - parent
