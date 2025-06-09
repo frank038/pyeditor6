@@ -516,11 +516,11 @@ class CustomMainWindow(QMainWindow):
             else:
                 afilename = os.path.realpath(sys.argv[1])
         #
-        if not os.path.exists(afilename):
+        if afilename and not os.path.exists(afilename):
             MyDialog("Info", "The file\n{}\ndoes not exist.".format(afilename), self)
             afilename = ""
             sys.exit()
-        if not os.access(afilename, os.R_OK):
+        if afilename and not os.access(afilename, os.R_OK):
             MyDialog("Info", "The file\n{}\nis not readable.".format(afilename), self)
             afilename = ""
             sys.exit()
