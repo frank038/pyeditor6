@@ -40,7 +40,8 @@ Features:
 - print dialog; single instance mode (only for the first instance of the program;
 - the -a option disables it at launch; the next instance of this program can own this funcionality after the first instance exits);
 - can load the files not closed by the user if this option is enabled
-- track the file change by other applications.
+- track the file change by other applications
+- reload the document.
 
 ![My image](https://github.com/frank038/pyeditor6/blob/main/screenshot2.jpg)
 
