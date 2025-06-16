@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# V 0.9.9
+# V 0.9.10
 
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QFormLayout,QStyleFactory,QWidget,QTextEdit,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QSpinBox,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
@@ -1149,6 +1149,11 @@ class ftab(QWidget):
             self.ljavascript()
         # text
         elif self.isargument == 4:
+            self.lang_combo.setCurrentIndex(3)
+            self.on_lang_combo(3)
+            self.ltext()
+        # unknown as text
+        elif self.isargument == None:
             self.lang_combo.setCurrentIndex(3)
             self.on_lang_combo(3)
             self.ltext()
