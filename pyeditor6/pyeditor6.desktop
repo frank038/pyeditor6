@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Pyeditor6
+GenericName=
+Exec=/FULL_PATH/pyeditor6/pyeditor6.sh
+TryExec=
+Path=
+Categories=Development;
+MimeType=application/x-shellscript;text/plain;text/x-python3;text/x-python;
+Keywords=editor;
+Icon=/FULL_PATH/pyeditor6/icons/program.svg
+Comment=Text editor
+Terminal=false
+NoDisplay=false
+Hidden=false

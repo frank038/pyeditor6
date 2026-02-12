@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# V 0.9.10
+# V 0.9.11
 
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QFormLayout,QStyleFactory,QWidget,QTextEdit,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QSpinBox,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
 from PyQt6.QtCore import (Qt,pyqtSignal,QCoreApplication,QObject,pyqtSlot,QFile,QIODevice,QPoint,QMimeDatabase,QFileSystemWatcher)
-from PyQt6.QtGui import (QAction,QColor,QFont,QIcon,QPalette,QPainter)
+from PyQt6.QtGui import (QGuiApplication,QAction,QColor,QFont,QIcon,QPalette,QPainter)
 from PyQt6.Qsci import (QsciLexerCustom,QsciScintilla,QsciLexerPython,QsciLexerBash,QsciLexerJavaScript)
 from PyQt6 import QtPrintSupport
 import os
@@ -158,7 +158,7 @@ class confWin(QDialog):
         pform.addRow("Font size - printer ", self.print_font_size)
         #
         self.single_app = QComboBox()
-        self.single_app.setToolTip("Single application mode")
+        self.single_app.setToolTip("Single application mode:\nthe files will be open in the same application.")
         self.single_app.setEditable(False)
         self.single_app.addItems(["No","Yes"])
         self.single_app.setCurrentIndex(SINGLEINSTANCE)
@@ -248,7 +248,7 @@ class firstMessage(QWidget):
         self.setWindowTitle(title)
         self.setWindowIcon(QIcon("icons/program.svg"))
         box = QBoxLayout(QBoxLayout.TopToBottom)
-        box.setContentsMargins(5,5,5,5)
+        box.setContentsMargins(4,4,4,4)
         self.setLayout(box)
         label = QLabel(message)
         box.addWidget(label)
@@ -401,6 +401,9 @@ class MyQsciScintilla(QsciScintilla):
     def mousePressEvent(self, e):
         QsciScintilla.mousePressEvent(self, e)
         self.keyPressed.emit(None)
+        
+    def dragEnterEvent(self, e):
+        e.ignore()
         
 
 class CustomMainWindow(QMainWindow):
@@ -641,7 +644,27 @@ class CustomMainWindow(QMainWindow):
             self.setStyleSheet("QPushButton, QComboBox {border: 0px solid #D1CFCF; background: #717171;} QPushButton:hover {border: 1px solid #cecece;}")
             self.frmtab.setStyleSheet("QTabWidget {background-color: #353535;}")
         #
+        self.setAcceptDrops(True)
         self.show()
+    
+    def dragEnterEvent(self, e):
+        mime_data = e.mimeData()
+        if mime_data.hasFormat('text/uri-list'):
+            e.accept()
+        else:
+            e.ignore()
+    
+    def dropEvent(self, e):
+        list_files = e.mimeData().urls()
+        len_files = len(list_files)
+        if len_files > 1:
+            MyDialog("Info", "Too many files to open.", self)
+            e.ignore()
+        elif len_files == 1:
+            _f = list_files[0].toLocalFile()
+            # self.on_open_f(_f)
+            self.on_single_instance(_f)
+        e.accept()
     
     def interfaces_removed(self, *args):
         try:
@@ -756,7 +779,7 @@ class CustomMainWindow(QMainWindow):
                 return
         #
         self.on_open_f(filename)
-        self.bring_to_top()
+        # self.bring_to_top()
         
     # related to on_open
     def on_open_f(self, fileName):
@@ -1932,6 +1955,7 @@ class MyDialog(QMessageBox):
         self.setWindowIcon(QIcon("icons/program.svg"))
         self.setWindowTitle(args[0])
         self.resize(DIALOGWIDTH,300)
+        self.setContentsMargins(4,4,4,4)
         self.setText(args[1])
         retval = self.exec()
     
@@ -1960,7 +1984,7 @@ class searchDialog(QDialog):
         self.resize(DIALOGWIDTH, 50)
         #
         vbox = QBoxLayout(QBoxLayout.Direction.TopToBottom)
-        vbox.setContentsMargins(5,5,5,5)
+        vbox.setContentsMargins(4,4,4,4)
         self.setLayout(vbox)
         #
         # self.line_edit = QLineEdit()
@@ -2111,6 +2135,7 @@ class retDialogBox(QMessageBox):
         super(retDialogBox, self).__init__(args[-1])
         self.setWindowIcon(QIcon("icons/program.svg"))
         self.setWindowTitle(args[0])
+        self.setContentsMargins(4,4,4,4)
         if args[0] == "Info":
             self.setIcon(QMessageBox.Icon.Information)
         elif args[0] == "Error":
@@ -2153,6 +2178,7 @@ class retDialogBox(QMessageBox):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    QGuiApplication.setDesktopFileName("pyeditor6")
     
     IS_SINGLEINSTANCE = 1
     if SINGLEINSTANCE:
