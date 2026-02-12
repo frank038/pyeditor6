@@ -5,7 +5,7 @@ Requires:
 - python3
 - pyqt6
 - qscintilla
-- python3-dbus and dbus.mainloop.pyqt6 (needet to own the single instance mode by the second instance of this program after the first instance exits; without them this functionality will be disabled)
+- python3-dbus and dbus.mainloop.pyqt6 [optional] (needet to own the single instance mode by the second instance of this program after the first instance exits; without them this functionality will be disabled)
 
 This program should be launched by using the bash script pyeditor6.sh.
 
