@@ -3,7 +3,7 @@
 
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QFormLayout,QStyleFactory,QWidget,QTextEdit,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QSpinBox,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
-from PyQt6.QtCore import (Qt,pyqtSignal,QCoreApplication,QObject,pyqtSlot,QFile,QIODevice,QPoint,QMimeDatabase,QFileSystemWatcher)
+from PyQt6.QtCore import (Qt,pyqtSignal,QEvent,QCoreApplication,QObject,pyqtSlot,QFile,QIODevice,QPoint,QMimeDatabase,QFileSystemWatcher)
 from PyQt6.QtGui import (QGuiApplication,QAction,QColor,QFont,QIcon,QPalette,QPainter)
 from PyQt6.Qsci import (QsciLexerCustom,QsciScintilla,QsciLexerPython,QsciLexerBash,QsciLexerJavaScript)
 from PyQt6 import QtPrintSupport
@@ -648,6 +648,12 @@ class CustomMainWindow(QMainWindow):
         self.show()
         # set focus
         pop_tab.my__editor.setFocus()
+        pop_tab.my__editor.installEventFilter(self)
+    
+    def eventFilter(self, obj, e):
+        if e.type() == QEvent.Type.FocusOut:
+            obj.setFocus()
+        return QObject.event(obj, e)
     
     def dragEnterEvent(self, e):
         mime_data = e.mimeData()
@@ -736,6 +742,7 @@ class CustomMainWindow(QMainWindow):
         self.frmtab.setCurrentIndex(self.frmtab.count()-1)
         self.frmtab.setTabToolTip(self.frmtab.count()-1, "Unknown")
         pop_tab.my__editor.setFocus()
+        pop_tab.my__editor.installEventFilter(self)
     
     def on_new(self):
         ret = retDialogBox("Question", "Create a new document?", self)
@@ -749,6 +756,7 @@ class CustomMainWindow(QMainWindow):
         self.frmtab.setCurrentIndex(self.frmtab.count()-1)
         self.frmtab.setTabToolTip(self.frmtab.count()-1, fileName or "Unknown")
         pop_tab.my__editor.setFocus()
+        pop_tab.my__editor.installEventFilter(self)
         
     def on_open(self):
         ret = retDialogBox("Question", "Open a new document?", self)
@@ -798,6 +806,7 @@ class CustomMainWindow(QMainWindow):
             self.frmtab.setCurrentIndex(self.frmtab.count()-1)
             self.frmtab.setTabToolTip(self.frmtab.count()-1, fileName or "Unknown")
             pop_tab.my__editor.setFocus()
+            pop_tab.my__editor.installEventFilter(self)
             #
             if not os.access(fileName, os.W_OK):
                 self.frmtab.tabBar().setTabTextColor(self.frmtab.count()-1, QColor("#009900"))
