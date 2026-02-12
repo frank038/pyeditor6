@@ -12,7 +12,6 @@ This program should be launched by using the bash script pyeditor6.sh.
 Features:
 
 - tabs for file name and displays its full path while hovering
-- word autocompletition
 - autocompletitions
 - string/word searching with history of previous searched words
 - comment out/uncomment, also for a group of lines of code
@@ -33,14 +32,13 @@ Features:
 - style colours (almost) fully customizable
 - status bar
 - optional command line argument: -p for python file, -b for bash file, -j for javascript file, -t for text file (file name is optional)
-- configurable with its config file
+- configurable through its setting dialog for the common settings and through its config file cfgpyeditor.py for the internal application settings.
 - built-in functions from qscintilla widget: tab/untab (TAB/ALT+TAB), undo/redo (CTRL+z/y), etc.;
-- setting dialog (for many options, others are in cfgpyeditor.py);
 - clone mode (currently disabled; opens a new tab with the same content of the ancestor document);
-- print dialog; single instance mode (only for the first instance of the program;
-- the -a option disables it at launch; the next instance of this program can own this funcionality after the first instance exits);
-- can load the files not closed by the user if this option is enabled
-- track the file change by other applications
+- print dialog;
+- single instance mode (all files open in the same application): the -a option disables it at launch; the next instance of this program can own this funcionality after the first instance exits;
+- can reload the files not closed by the user (to enable/disable in the config dialog);
+- tracks any changes made by other applications in the same files
 - reload the document
 - drag and drop support.
 
