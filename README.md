@@ -41,7 +41,8 @@ Features:
 - the -a option disables it at launch; the next instance of this program can own this funcionality after the first instance exits);
 - can load the files not closed by the user if this option is enabled
 - track the file change by other applications
-- reload the document.
+- reload the document
+- drag and drop support.
 
 ![My image](https://github.com/frank038/pyeditor6/blob/main/screenshot2.jpg)
 
