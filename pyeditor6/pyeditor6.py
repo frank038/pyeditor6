@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# V 0.9.11
+# V 0.9.12
 
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QFormLayout,QStyleFactory,QWidget,QTextEdit,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QSpinBox,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
@@ -646,6 +646,8 @@ class CustomMainWindow(QMainWindow):
         #
         self.setAcceptDrops(True)
         self.show()
+        # set focus
+        pop_tab.my__editor.setFocus()
     
     def dragEnterEvent(self, e):
         mime_data = e.mimeData()
@@ -733,6 +735,7 @@ class CustomMainWindow(QMainWindow):
         self.frmtab.addTab(pop_tab, "Unknown")
         self.frmtab.setCurrentIndex(self.frmtab.count()-1)
         self.frmtab.setTabToolTip(self.frmtab.count()-1, "Unknown")
+        pop_tab.my__editor.setFocus()
     
     def on_new(self):
         ret = retDialogBox("Question", "Create a new document?", self)
@@ -745,7 +748,8 @@ class CustomMainWindow(QMainWindow):
         self.frmtab.addTab(pop_tab, os.path.basename(fileName) or "Unknown")
         self.frmtab.setCurrentIndex(self.frmtab.count()-1)
         self.frmtab.setTabToolTip(self.frmtab.count()-1, fileName or "Unknown")
-    
+        pop_tab.my__editor.setFocus()
+        
     def on_open(self):
         ret = retDialogBox("Question", "Open a new document?", self)
         if ret.getValue() == 0:
@@ -793,6 +797,7 @@ class CustomMainWindow(QMainWindow):
             self.frmtab.addTab(pop_tab, os.path.basename(fileName) or "Unknown")
             self.frmtab.setCurrentIndex(self.frmtab.count()-1)
             self.frmtab.setTabToolTip(self.frmtab.count()-1, fileName or "Unknown")
+            pop_tab.my__editor.setFocus()
             #
             if not os.access(fileName, os.W_OK):
                 self.frmtab.tabBar().setTabTextColor(self.frmtab.count()-1, QColor("#009900"))
@@ -922,6 +927,11 @@ class ftab(QWidget):
         #
         if self.pageName:
             self.add_filewatcher(self.pageName)
+        self.my__editor = None
+        self.get_editor()
+    	
+    def get_editor(self):
+        self.my__editor = self.__editor
     
     def add_filewatcher(self, _file):
         self.file_watcher.addPath(_file)
