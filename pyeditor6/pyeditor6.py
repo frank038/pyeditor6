@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# V 0.9.13
+# V 0.9.14
 
 import sys
-from PyQt6.QtWidgets import (QMainWindow,QFormLayout,QStyleFactory,QWidget,QTextEdit,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QSpinBox,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
+from PyQt6.QtWidgets import (QMainWindow,QGridLayout,QFormLayout,QStyleFactory,QWidget,QTextEdit,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QSpinBox,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
 from PyQt6.QtCore import (Qt,pyqtSignal,QEvent,QCoreApplication,QObject,pyqtSlot,QFile,QIODevice,QPoint,QMimeDatabase,QFileSystemWatcher)
 from PyQt6.QtGui import (QGuiApplication,QAction,QColor,QFont,QIcon,QPalette,QPainter)
 from PyQt6.Qsci import (QsciLexerCustom,QsciScintilla,QsciLexerPython,QsciLexerBash,QsciLexerJavaScript)
@@ -653,7 +653,7 @@ class CustomMainWindow(QMainWindow):
     def eventFilter(self, obj, e):
         if isinstance(obj, MyQsciScintilla):
             if e.type() == QEvent.Type.FocusOut:
-                if not obj.hasFocus:
+                if not obj.hasFocus():
                     obj.setFocus()
         return QObject.event(obj, e)
     
@@ -2156,7 +2156,16 @@ class retDialogBox(QMessageBox):
         super(retDialogBox, self).__init__(args[-1])
         self.setWindowIcon(QIcon("icons/program.svg"))
         self.setWindowTitle(args[0])
-        self.setContentsMargins(4,4,4,4)
+        #
+        # _layout = self.findChild(QGridLayout)
+        # if _layout:
+            # _layout.setSpacing(0)
+            # _layout.setContentsMargins(0,0,0,0)
+            # _layout.setVerticalSpacing(0)
+            # _layout.setHorizontalSpacing(0)
+        # #
+        # self.setStyleSheet("border: 0px solid; margin: 0px;")
+        self.setContentsMargins(0,0,0,0)
         if args[0] == "Info":
             self.setIcon(QMessageBox.Icon.Information)
         elif args[0] == "Error":
