@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# V 0.9.12
+# V 0.9.13
 
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QFormLayout,QStyleFactory,QWidget,QTextEdit,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QSpinBox,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
@@ -651,8 +651,10 @@ class CustomMainWindow(QMainWindow):
         pop_tab.my__editor.installEventFilter(self)
     
     def eventFilter(self, obj, e):
-        if e.type() == QEvent.Type.FocusOut:
-            obj.setFocus()
+        if isinstance(obj, MyQsciScintilla):
+            if e.type() == QEvent.Type.FocusOut:
+                if not obj.hasFocus:
+                    obj.setFocus()
         return QObject.event(obj, e)
     
     def dragEnterEvent(self, e):
