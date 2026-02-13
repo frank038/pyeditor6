@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# V 0.9.14
+# V 0.9.15
 
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QGridLayout,QFormLayout,QStyleFactory,QWidget,QTextEdit,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QSpinBox,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
@@ -554,6 +554,7 @@ class CustomMainWindow(QMainWindow):
         self.frmtab.setMovable(True)
         # self.frmtab.tabCloseRequested.connect(self.on_tab_close)
         self.frmtab.currentChanged.connect(self.on_tab_changed)
+        self.current_tab_index = None
         # the current editor
         self.current_editor = None
         # set the default editor style from command line
@@ -653,8 +654,13 @@ class CustomMainWindow(QMainWindow):
     def eventFilter(self, obj, e):
         if isinstance(obj, MyQsciScintilla):
             if e.type() == QEvent.Type.FocusOut:
-                if not obj.hasFocus():
-                    obj.setFocus()
+                _ed = self.frmtab.widget(self.current_tab_index).my__editor
+                if not _ed.hasFocus():
+                    _ed.setFocus()
+                    return True
+                # if not obj.hasFocus():
+                    # obj.setFocus()
+                    # return True
         return QObject.event(obj, e)
     
     def dragEnterEvent(self, e):
@@ -715,6 +721,7 @@ class CustomMainWindow(QMainWindow):
             # return 4
         
     def on_tab_changed(self, idx):
+        self.current_tab_index = idx
         # self.sender().tabText(idx)
         self.setWindowTitle("pyeditor6 - {}".format(self.frmtab.tabText(idx)))
     
