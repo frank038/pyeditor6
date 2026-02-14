@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# V 0.9.15
+# V 0.9.16
 
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QGridLayout,QFormLayout,QStyleFactory,QWidget,QTextEdit,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QSpinBox,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
@@ -454,24 +454,28 @@ class CustomMainWindow(QMainWindow):
         self.btn_h_menu = QMenu()
         self.btn_h.setMenu(self.btn_h_menu)
         self.btn_h_menu.triggered.connect(self.on_h_menu)
+        self.btn_h.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         #
         self.btn_new = QPushButton()
         self.btn_new.setIcon(QIcon().fromTheme(QIcon.ThemeIcon.DocumentNew, QIcon(os.path.join(ICON_PATH, "document-new.png"))))
         self.btn_new.setToolTip("New document")
         self.btn_new.clicked.connect(self.on_new)
         self.btn_box0.addWidget(self.btn_new, stretch=1)
+        self.btn_new.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         #
         self.btn_open = QPushButton()
         self.btn_open.setIcon(QIcon().fromTheme(QIcon.ThemeIcon.DocumentOpen, QIcon(os.path.join(ICON_PATH, "document-open.png"))))
         self.btn_open.setToolTip("Open a new document")
         self.btn_open.clicked.connect(self.on_open)
         self.btn_box0.addWidget(self.btn_open, stretch=1)
+        self.btn_open.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         # # disabled: the ancestor document is been marked as modified wrongly
         # self.btn_clone = QPushButton()
         # self.btn_clone.setIcon(QIcon().fromTheme(QIcon.ThemeIcon.DocumentNew, QIcon(os.path.join(ICON_PATH, "document-new.png"))))
         # self.btn_clone.setToolTip("Clone the current document")
         # self.btn_clone.clicked.connect(self.on_clone)
         # self.btn_box0.addWidget(self.btn_clone, stretch=1)
+        # self.btn_clone.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         #
         self.btn_box0.addStretch(20)
         #
@@ -480,12 +484,14 @@ class CustomMainWindow(QMainWindow):
         self.config_btn.setToolTip("Settings")
         self.config_btn.clicked.connect(self.config_btn_action)
         self.btn_box0.addWidget(self.config_btn, stretch=1)
+        self.config_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         #
         self.__btn = QPushButton()
         self.__btn.setIcon(QIcon().fromTheme(QIcon.ThemeIcon.WindowClose, QIcon(os.path.join(ICON_PATH, "application-exit.png"))))
         self.__btn.setToolTip("Exit")
         self.__btn.clicked.connect(self.__btn_action)
         self.btn_box0.addWidget(self.__btn, stretch=1)
+        self.__btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         # the history of opened files
         self.pageNameHistory = []
         try:
@@ -502,13 +508,6 @@ class CustomMainWindow(QMainWindow):
         #
         self.pageName = ""
         afilename = ""
-            
-        # if len(sys.argv) > 1:
-            # for el in sys.argv[1:]:
-                # if el not in ["-p", "-b", "-j", "-t", "-a"]:
-                    # afilename = el
-                    # break
-        #
         # if afilename:
             # afilename = os.path.realpath(afilename)
         #
@@ -545,6 +544,7 @@ class CustomMainWindow(QMainWindow):
         #########
         ### tabwidget
         self.frmtab = QTabWidget()
+        self.frmtab.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.frmtab_tab_text_color = self.frmtab.tabBar().tabTextColor(0)
         self.frmtab.setContentsMargins(0,0,0,0)
         self.__lyt.addWidget(self.frmtab)
@@ -554,7 +554,6 @@ class CustomMainWindow(QMainWindow):
         self.frmtab.setMovable(True)
         # self.frmtab.tabCloseRequested.connect(self.on_tab_close)
         self.frmtab.currentChanged.connect(self.on_tab_changed)
-        self.current_tab_index = None
         # the current editor
         self.current_editor = None
         # set the default editor style from command line
@@ -647,21 +646,21 @@ class CustomMainWindow(QMainWindow):
         #
         self.setAcceptDrops(True)
         self.show()
-        # set focus
-        pop_tab.my__editor.setFocus()
-        pop_tab.my__editor.installEventFilter(self)
+        # # set focus
+        # pop_tab.my__editor.setFocus()
+        # pop_tab.my__editor.installEventFilter(self)
     
-    def eventFilter(self, obj, e):
-        if isinstance(obj, MyQsciScintilla):
-            if e.type() == QEvent.Type.FocusOut:
-                _ed = self.frmtab.widget(self.current_tab_index).my__editor
-                if not _ed.hasFocus():
-                    _ed.setFocus()
-                    return True
-                # if not obj.hasFocus():
-                    # obj.setFocus()
+    # def eventFilter(self, obj, e):
+        # if isinstance(obj, MyQsciScintilla):
+            # if e.type() == QEvent.Type.FocusOut:
+                # _ed = self.frmtab.widget(self.current_tab_index).my__editor
+                # if not _ed.hasFocus():
+                    # _ed.setFocus()
                     # return True
-        return QObject.event(obj, e)
+                # # if not obj.hasFocus():
+                    # # obj.setFocus()
+                    # # return True
+        # return QObject.event(obj, e)
     
     def dragEnterEvent(self, e):
         mime_data = e.mimeData()
@@ -721,7 +720,6 @@ class CustomMainWindow(QMainWindow):
             # return 4
         
     def on_tab_changed(self, idx):
-        self.current_tab_index = idx
         # self.sender().tabText(idx)
         self.setWindowTitle("pyeditor6 - {}".format(self.frmtab.tabText(idx)))
     
@@ -751,7 +749,7 @@ class CustomMainWindow(QMainWindow):
         self.frmtab.setCurrentIndex(self.frmtab.count()-1)
         self.frmtab.setTabToolTip(self.frmtab.count()-1, "Unknown")
         pop_tab.my__editor.setFocus()
-        pop_tab.my__editor.installEventFilter(self)
+        # pop_tab.my__editor.installEventFilter(self)
     
     def on_new(self):
         ret = retDialogBox("Question", "Create a new document?", self)
@@ -765,7 +763,7 @@ class CustomMainWindow(QMainWindow):
         self.frmtab.setCurrentIndex(self.frmtab.count()-1)
         self.frmtab.setTabToolTip(self.frmtab.count()-1, fileName or "Unknown")
         pop_tab.my__editor.setFocus()
-        pop_tab.my__editor.installEventFilter(self)
+        # pop_tab.my__editor.installEventFilter(self)
         
     def on_open(self):
         ret = retDialogBox("Question", "Open a new document?", self)
@@ -815,7 +813,7 @@ class CustomMainWindow(QMainWindow):
             self.frmtab.setCurrentIndex(self.frmtab.count()-1)
             self.frmtab.setTabToolTip(self.frmtab.count()-1, fileName or "Unknown")
             pop_tab.my__editor.setFocus()
-            pop_tab.my__editor.installEventFilter(self)
+            # pop_tab.my__editor.installEventFilter(self)
             #
             if not os.access(fileName, os.W_OK):
                 self.frmtab.tabBar().setTabTextColor(self.frmtab.count()-1, QColor("#009900"))
@@ -992,14 +990,17 @@ class ftab(QWidget):
         self.combo_tab = QComboBox()
         self.combo_tab.addItems(["Spaces", "Tab"])
         self.btn_box.addWidget(self.combo_tab)
+        self.combo_tab.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         #
         self.combo_space = QComboBox()
         self.combo_space.addItems(["2","3","4","5","6","7","8"])
         self.btn_box.addWidget(self.combo_space)
+        self.combo_space.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         #
         self.lang_combo = QComboBox()
         self.lang_combo.addItems(["p", "b", "j", "t"])
         self.btn_box.addWidget(self.lang_combo)
+        self.lang_combo.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         #
         # self.combo_eol = QComboBox()
         # self.combo_eol.addItems(["L","W"])
@@ -1010,12 +1011,14 @@ class ftab(QWidget):
         self.btn_ro.setToolTip("Read only")
         self.btn_ro.clicked.connect(self.on_read_only)
         self.btn_box.addWidget(self.btn_ro, stretch=1)
+        self.btn_ro.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         #  
         self.btn_search = QPushButton()
         self.btn_search.setIcon(QIcon().fromTheme(QIcon.ThemeIcon.EditFind, QIcon(os.path.join(ICON_PATH, "edit-find-replace.png"))))
         self.btn_search.setToolTip("Search or replace")
         self.btn_search.clicked.connect(self.on_search)
         self.btn_box.addWidget(self.btn_search, stretch=1)
+        self.btn_search.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         #
         # self.btn_box2.addStretch(stretch=20)
         #
@@ -1024,12 +1027,14 @@ class ftab(QWidget):
         self.btn_comment.setToolTip("Comment out")
         self.btn_comment.clicked.connect(self.on_btn_comment)
         self.btn_box.addWidget(self.btn_comment, stretch=1)
+        self.btn_comment.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         #
         self.btn_uncomment = QPushButton()
         self.btn_uncomment.setIcon(QIcon().fromTheme(QIcon.ThemeIcon.FormatIndentLess, QIcon(os.path.join(ICON_PATH, "uncomment.png"))))
         self.btn_uncomment.setToolTip("Uncomment")
         self.btn_uncomment.clicked.connect(self.on_btn_uncomment)
         self.btn_box.addWidget(self.btn_uncomment, stretch=1)
+        self.btn_uncomment.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         #
         self.btn_hl = QPushButton()
         self.btn_hl.setIcon(QIcon().fromTheme(QIcon.ThemeIcon.FormatTextBold, QIcon(os.path.join(ICON_PATH, "highlight.png"))))
@@ -1037,18 +1042,21 @@ class ftab(QWidget):
         self.btn_hl.setCheckable(True)
         self.btn_hl.clicked.connect(self.on_btn_hl)
         self.btn_box.addWidget(self.btn_hl, stretch=0)
+        self.btn_hl.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         #
         self.btn_print = QPushButton()
         self.btn_print.setIcon(QIcon().fromTheme(QIcon.ThemeIcon.DocumentPrint, QIcon(os.path.join(ICON_PATH, "document-print.png"))))
         self.btn_print.setToolTip("Print")
         self.btn_print.clicked.connect(self.on_btn_print)
         self.btn_box.addWidget(self.btn_print, stretch=0)
+        self.btn_print.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         #
         self.btn_reload = QPushButton()
         self.btn_reload.setIcon(QIcon().fromTheme("redo", QIcon(os.path.join(ICON_PATH, "reload.png"))))
         self.btn_reload.setToolTip("Reload the document")
         self.btn_reload.clicked.connect(self.on_btn_reload)
         self.btn_box.addWidget(self.btn_reload, stretch=0)
+        self.btn_reload.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         #
         self.btn_box.addStretch(stretch=20)
         #
@@ -1057,48 +1065,21 @@ class ftab(QWidget):
         self.btn_save.setToolTip("Save this document")
         self.btn_save.clicked.connect(self.on_save)
         self.btn_box.addWidget(self.btn_save, stretch=1)
+        self.btn_save.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         #
         self.btn_save_as = QPushButton()
         self.btn_save_as.setIcon(QIcon().fromTheme(QIcon.ThemeIcon.DocumentSaveAs, QIcon(os.path.join(ICON_PATH, "document-save-as.png"))))
         self.btn_save_as.setToolTip("Save this document with a new name")
         self.btn_save_as.clicked.connect(self.on_save_as)
         self.btn_box.addWidget(self.btn_save_as, stretch=1)
+        self.btn_save_as.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         #
         self.__btn_close = QPushButton()
         self.__btn_close.setIcon(QIcon().fromTheme(QIcon.ThemeIcon.WindowClose, QIcon(os.path.join(ICON_PATH, "application-exit.png"))))
         self.__btn_close.setToolTip("Close this document")
         self.__btn_close.clicked.connect(self.__btn_action_close)
         self.btn_box.addWidget(self.__btn_close, stretch=1)
-        #
-        ####
-        # self.btn_box2 = QHBoxLayout()
-        # self.__lyt.addLayout(self.btn_box2)
-        # self.btn_search = QPushButton()
-        # self.btn_search.setIcon(QIcon().fromTheme(QIcon.ThemeIcon.EditFind, QIcon(os.path.join(ICON_PATH, "edit-find-replace.png"))))
-        # self.btn_search.setToolTip("Search or replace")
-        # self.btn_search.clicked.connect(self.on_search)
-        # self.btn_box.addWidget(self.btn_search, stretch=1)
-        # #
-        # # self.btn_box2.addStretch(stretch=20)
-        # #
-        # self.btn_comment = QPushButton()
-        # self.btn_comment.setIcon(QIcon().fromTheme(QIcon.ThemeIcon.FormatIndentMore, QIcon(os.path.join(ICON_PATH, "commentout.png"))))
-        # self.btn_comment.setToolTip("Comment out")
-        # self.btn_comment.clicked.connect(self.on_btn_comment)
-        # self.btn_box.addWidget(self.btn_comment, stretch=1)
-        # #
-        # self.btn_uncomment = QPushButton()
-        # self.btn_uncomment.setIcon(QIcon().fromTheme(QIcon.ThemeIcon.FormatIndentLess, QIcon(os.path.join(ICON_PATH, "uncomment.png"))))
-        # self.btn_uncomment.setToolTip("Uncomment")
-        # self.btn_uncomment.clicked.connect(self.on_btn_uncomment)
-        # self.btn_box.addWidget(self.btn_uncomment, stretch=1)
-        # #
-        # self.btn_hl = QPushButton()
-        # self.btn_hl.setIcon(QIcon().fromTheme(QIcon.ThemeIcon.FormatTextBold, QIcon(os.path.join(ICON_PATH, "highlight.png"))))
-        # self.btn_hl.setToolTip("Highlight")
-        # self.btn_hl.setCheckable(True)
-        # self.btn_hl.clicked.connect(self.on_btn_hl)
-        # self.btn_box.addWidget(self.btn_hl, stretch=0)
+        self.__btn_close.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         #
         # self.btn_box2.addStretch(stretch=20)
         # ----------------------------------------
@@ -1270,9 +1251,16 @@ class ftab(QWidget):
         font = QFont(PRINT_FONT, PRINT_FONT_SIZE)
         _editor.setFont(font)
         _editor.setPlainText(self.__editor.text())
-        dlg = QtPrintSupport.QPrintDialog()
+        # dlg = QtPrintSupport.QPrintDialog()
+        #
+        _printer = QtPrintSupport.QPrinter()
+        _printer.setOutputFormat(QtPrintSupport.QPrinter.OutputFormat.PdfFormat)
+        _idx = self.parent.frmtab.currentIndex()
+        _file_path_name = self.parent.frmtab.tabToolTip(_idx)
+        _printer.setOutputFileName(_file_path_name+".pdf")
+        dlg = QtPrintSupport.QPrintDialog(_printer, self)
         if dlg.exec():
-            _printer = dlg.printer()
+            # _printer = dlg.printer()
             _editor.print(_printer)
         
     def on_btn_reload(self):
