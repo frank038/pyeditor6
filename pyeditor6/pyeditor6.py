@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# V 0.9.16
+# V 0.9.17
 
 import sys
 from PyQt6.QtWidgets import (QMainWindow,QGridLayout,QFormLayout,QStyleFactory,QWidget,QTextEdit,QFileDialog,QSizePolicy,QFrame,QBoxLayout,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QSpinBox,QComboBox,QCheckBox,QMenu,QStatusBar,QTabWidget) 
@@ -389,7 +389,7 @@ class MyQsciScintilla(QsciScintilla):
         self.setEolVisibility(not self.eolVisibility())
     
     def on_customAction5(self):
-        if self.wrapMode():
+        if self.wrapMode() != QsciScintilla.WrapMode.WrapNone:
             self.setWrapMode(QsciScintilla.WrapMode.WrapNone)
         else:
             self.setWrapMode(QsciScintilla.WrapMode.WrapWord)
